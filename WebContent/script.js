@@ -25,15 +25,21 @@ const winningMessageTextElement = document.querySelector('[data-winning-message-
 const waiting = document.getElementById('waiting');
 const readyButton = document.getElementById('ready');
 const manualRestartButton = document.getElementById('manualRestart');
+const historyToggle = document.getElementById('historyToggle');
+const historyMessage = document.getElementById("history");
+const historyInfo = document.querySelector('[history-message-text]');
+const closeButton = document.getElementById('closeButton');
 
 let xCount = 0;
 let oCount = 0;
 let boardCheck = [];
 let circleTurn;
 let gameKey = "";
+let gameId = "";
 
 restartButton.addEventListener('click', resetGame);
 createButton.addEventListener('click', createGame);
+closeButton.addEventListener('click', hideHistory);
 createInput.addEventListener('keypress', function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
@@ -43,11 +49,20 @@ createInput.addEventListener('keypress', function (event) {
 
 readyButton.addEventListener('click', resetGame);
 
-manualRestartButton.addEventListener('click', resetGame)
+manualRestartButton.addEventListener('click', resetGame);
+
+historyToggle.addEventListener('click', history);
+
+function uuid() {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
 
 async function createGame() {
-    if (document.getElementById('createInput').value != undefined) {
+    if (document.getElementById('createInput').value != "") {
         gameKey = document.getElementById('createInput').value
+		gameId = uuid();
         const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/createGame?key=" + gameKey)
             .catch(error => console.warn(error));
         const resData = await response.text();
@@ -77,6 +92,7 @@ function startGameX() {
     waiting.style.display = "none";
     board.style.display = "grid";
     manualRestartButton.style.display = "flex";
+    historyToggle.style.display = "flex";
     cellElements.forEach(cell => {
         cell.classList.remove(X_CLASS)
         cell.classList.remove(O_CLASS)
@@ -297,7 +313,7 @@ async function saveDetails(sym, loc){
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            gameId: gameKey,
+            gameId: gameId,
             playerId: playerIdTemp,
             symbol: sym,
             location: loc,
@@ -321,8 +337,8 @@ async function viewHistory(playerId) {
     console.log(gamesList);
 }
 
-async function viewMovesRecord(e) {
-    const response = await fetch(`http://localhost:8080/TicTacToeRS/rest/getgame/${gameKey}`, {
+async function history() {
+    const response = await fetch(`http://localhost:8080/TicTacToeRS/rest/getgame/${gameId}`, {
         headers: {
             'Content-Type': 'application/json',
         }
@@ -331,6 +347,10 @@ async function viewMovesRecord(e) {
     const data = await response.json();
     const movesList = data.list;
 
-    console.log(data);
-    console.log(movesList);
+    historyMessage.classList.add('show');
+    historyInfo.innerText = movesList;
+}
+
+function hideHistory(){
+	historyMessage.classList.remove('show');
 }

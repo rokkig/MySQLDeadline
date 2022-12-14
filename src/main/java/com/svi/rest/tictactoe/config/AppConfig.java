@@ -5,8 +5,9 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public enum AppConfig {
-	PLAYERSFOLDER("PLAYERSFOLDER"),
-	GAMESFOLDER("GAMESFOLDER");
+	ENDPOINT("ENDPOINT"),
+	USERNAME("USERNAME"),
+	PASSWORD("PASSWORD");
 	
 	private String value = "";
 	private static Properties prop;

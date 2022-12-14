@@ -1,6 +1,7 @@
 package com.svi.rest.tictactoe.resources;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -11,26 +12,25 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.svi.rest.tictactoe.dao.PlayerDao;
+import com.svi.rest.tictactoe.daoimpl.PlayerDaoImpl;
 import com.svi.rest.tictactoe.dto.GameDetailsListDTO;
 import com.svi.rest.tictactoe.dto.InfoDTO;
 import com.svi.rest.tictactoe.dto.MessageDTO;
 import com.svi.rest.tictactoe.dto.PlayersGamesListDTO;
-import com.svi.rest.tictactoe.services.GetService;
-import com.svi.rest.tictactoe.services.PostService;
 
 @Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GameResource {
 
-	PostService postService = new PostService();
-	GetService getService = new GetService();
+	PlayerDao playerDaoImpl = new PlayerDaoImpl();
 	
 	@POST
 	@Path("/save")
 	public Response postGameInfo(InfoDTO body) {
 		
-		MessageDTO message = postService.saveInfo(body);		
+		MessageDTO message = playerDaoImpl.save(body);		
 		return Response.ok().entity(message).build();
 		
 	}
@@ -39,7 +39,7 @@ public class GameResource {
 	@Path("/listgames/{playerId}")
 	public Response getPlayerGamesList(@PathParam("playerId") String playerId) throws IOException {
 		
-		PlayersGamesListDTO playersGamesListDTO =  getService.getPlayersGamesList(playerId);							
+		PlayersGamesListDTO playersGamesListDTO = playerDaoImpl.listGames(playerId);
 		return Response.ok().entity(playersGamesListDTO).build();
 	}
 	
@@ -47,7 +47,7 @@ public class GameResource {
 	@Path("/getgame/{gameId}")
 	public Response getGame(@PathParam("gameId") String gameId) throws IOException {
 	
-		GameDetailsListDTO gamesList = getService.getGameDetails(gameId);		
+		GameDetailsListDTO gamesList = playerDaoImpl.getGames(gameId);		
 		return Response.ok().entity(gamesList).build();
 	}
 	
