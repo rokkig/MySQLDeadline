@@ -25,7 +25,8 @@ const winningMessageTextElement = document.querySelector('[data-winning-message-
 const waiting = document.getElementById('waiting');
 const readyButton = document.getElementById('ready');
 const manualRestartButton = document.getElementById('manualRestart');
-const historyToggle = document.getElementById('historyToggle');
+const historyToggleX = document.getElementById('historyToggle');
+const historyToggleO = document.getElementById('historyToggle');
 const historyMessage = document.getElementById("history");
 const historyInfo = document.querySelector('[history-message-text]');
 const closeButton = document.getElementById('closeButton');
@@ -36,6 +37,8 @@ let boardCheck = [];
 let circleTurn;
 let gameKey = "";
 let gameId = "";
+let playerIdX = "";
+let playerIdO = "";
 
 restartButton.addEventListener('click', resetGame);
 createButton.addEventListener('click', createGame);
@@ -51,7 +54,8 @@ readyButton.addEventListener('click', resetGame);
 
 manualRestartButton.addEventListener('click', resetGame);
 
-historyToggle.addEventListener('click', history);
+historyToggleX.addEventListener('click', viewHistory(playerIdX));
+historyToggleO.addEventListener('click', viewHistory(playerIdO));
 
 function uuid() {
   return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
@@ -70,9 +74,11 @@ async function createGame() {
             console.log("waiting for other player")
             create.style.display = "none";
             waiting.style.display = "flex";
+            playerIdX = gameKey + "x";
             checkLoop();
         } if (resData == 'O') {
             console.log("Let the games begin!")
+            playerIdO = gameKey + "o";
             startGameO();
 
         } else {
@@ -92,7 +98,7 @@ function startGameX() {
     waiting.style.display = "none";
     board.style.display = "grid";
     manualRestartButton.style.display = "flex";
-    historyToggle.style.display = "flex";
+    historyToggleX.style.display = "flex";
     cellElements.forEach(cell => {
         cell.classList.remove(X_CLASS)
         cell.classList.remove(O_CLASS)
@@ -112,6 +118,7 @@ function startGameO() {
     create.style.display = "none";
     board.style.display = "grid";
     manualRestartButton.style.display = "flex";
+    historyToggleO.style.display = "flex";
     cellElements.forEach(cell => {
         cell.classList.remove(X_CLASS)
         cell.classList.remove(O_CLASS)
