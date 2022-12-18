@@ -20,9 +20,12 @@ const create = document.getElementById('createGame');
 const winningMessageElement = document.getElementById("winningMessage");
 const restartButton = document.getElementById('restartButton');
 const createButton = document.getElementById('createButton');
+const joinButton = document.getElementById('joinButton');
 const createInput = document.getElementById('createInput');
+const nameInput = document.getElementById('nameInput');
 const winningMessageTextElement = document.querySelector('[data-winning-message-text]')
 const waiting = document.getElementById('waiting');
+const waitingId = document.getElementById('waitingId');
 const readyButton = document.getElementById('ready');
 const manualRestartButton = document.getElementById('manualRestart');
 const historyToggleX = document.getElementById('historyToggle');
@@ -42,6 +45,7 @@ let playerIdO = "";
 
 restartButton.addEventListener('click', resetGame);
 createButton.addEventListener('click', createGame);
+joinButton.addEventListener('click', joinGame);
 closeButton.addEventListener('click', hideHistory);
 createInput.addEventListener('keypress', function (event) {
     if (event.key === "Enter") {
@@ -64,28 +68,42 @@ function uuid() {
 }
 
 async function createGame() {
-    if (document.getElementById('createInput').value != "") {
-        gameKey = document.getElementById('createInput').value
-		gameId = uuid();
+    if(document.getElementById('nameInput').value != ""){
+        gameKey = uuid();
         const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/createGame?key=" + gameKey)
-            .catch(error => console.warn(error));
+        .catch(error => console.warn(error));
         const resData = await response.text();
         if (resData == 'X') {
-            console.log("waiting for other player")
+            // console.log("waiting for other player")
             create.style.display = "none";
             waiting.style.display = "flex";
-            playerIdX = gameKey + "x";
+            waitingId.innerHTML = "Share your game key: " + gameKey;
+            playerIdX = document.getElementById('nameInput').value;
             checkLoop();
-        } if (resData == 'O') {
-            console.log("Let the games begin!")
-            playerIdO = gameKey + "o";
-            startGameO();
+        } else{
+            resetGame();
+        }
+    } else{
+        console.log('type your name!')
+    }
+}
 
-        } else {
-            console.log(resData)
+async function joinGame() {
+    if (document.getElementById('createInput').value != "" && document.getElementById('nameInput').value != "") {
+        gameKey = document.getElementById('createInput').value;
+        const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/createGame?key=" + gameKey)
+        .catch(error => console.warn(error));
+        const resData = await response.text();
+        if (resData == 'O') {
+            console.log("Let the games begin!")
+            playerIdO = document.getElementById('nameInput').value;
+            startGameO();
+        }else{
+            resetGame();
         }
     }
 }
+
 
 function resetGame() {
     fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/reset?key=" + gameKey)
@@ -202,7 +220,7 @@ async function handleClickX(e) {
 		const resData = await res.text();
 		
 		if (resData != "[TAKEN]" && X_CLASS) {
-            saveDetails(X_CLASS,location);
+            saveDetails(playerIdX, X_CLASS,location);
             placeMark(cell, X_CLASS);
 		} else {
 			console.log("The tile is taken!")
@@ -228,9 +246,9 @@ async function handleClickO(e) {
             .catch(error => console.warn(error));
 
 		const resData = await res.text();
-            
+
 		if (resData != "[TAKEN]") {
-            saveDetails(O_CLASS,location);
+            saveDetails(playerIdO, O_CLASS,location);
             placeMark(cell, O_CLASS);
         } else {
 			console.log("The tile is taken!")
@@ -243,12 +261,8 @@ async function handleClickO(e) {
 function endGame(draw, currentClass) {
     if (draw) {
         winningMessageTextElement.innerText = "Draw!"
-        viewHistory(gameKey + X_CLASS);
-        viewHistory(gameKey + O_CLASS);
     } else {
         winningMessageTextElement.innerText = `${currentClass.toUpperCase()} Wins!`
-        viewHistory(gameKey + X_CLASS);
-        viewHistory(gameKey + O_CLASS);
     }
     winningMessageElement.classList.add('show')
 }
@@ -300,7 +314,7 @@ async function boardDetails() {
     delayLoop();
 }
 
-async function saveDetails(sym, loc){
+async function saveDetails(pid, sym, loc){
 	const date = new Date();
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -311,8 +325,6 @@ async function saveDetails(sym, loc){
     
     
     const datesaved = `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`;
-
-    const playerIdTemp = gameKey + sym;
     
     fetch(`http://localhost:8080/TicTacToeRS/rest/save`, {
         method: 'POST',
@@ -320,8 +332,8 @@ async function saveDetails(sym, loc){
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            gameId: gameId,
-            playerId: playerIdTemp,
+            gameId: gameKey,
+            playerId: pid,
             symbol: sym,
             location: loc,
             datesaved: datesaved
@@ -345,7 +357,7 @@ async function viewHistory(playerId) {
 }
 
 async function history() {
-    const response = await fetch(`http://localhost:8080/TicTacToeRS/rest/getgame/${gameId}`, {
+    const response = await fetch(`http://localhost:8080/TicTacToeRS/rest/getgame/${gameKey}`, {
         headers: {
             'Content-Type': 'application/json',
         }
@@ -354,8 +366,11 @@ async function history() {
     const data = await response.json();
     const movesList = data.list;
 
-    historyMessage.classList.add('show');
-    historyInfo.innerText = movesList;
+    console.log(data);
+    console.log(movesList);
+
+    // historyMessage.classList.add('show');
+    // historyInfo.innerText = movesList;
 }
 
 function hideHistory(){
